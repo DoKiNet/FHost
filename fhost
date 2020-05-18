@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.1"
-FHOST_BUILD="0.1.0"
+FHOST_BUILD="0.1.1"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -45,6 +45,17 @@ elif [ "$ARG1"  == "uninstall" ] && [ "$ARG2" == "client" ]; then
     echo "FHOST UNINSTALLED"
     echo ""
 ################## END - UNINSTALL CLIENT ##################
+
+
+################## BEGIN - VERSION ##################
+elif [ "$ARG1" == "version" ] || [ "$ARG1" == "-v" ] || \
+     [ "$ARG1" == "--version" ] || [ "$ARG1" == "-version" ] || \
+     [ "$ARG1" == "--v" ]; then
+
+    echo -e "\nFHost - Version: $FHOST_VERSION\n"
+    echo -e "Fast Hosting Management\n"
+
+################## END - VERSION ##################
 
 else
     echo -e "\nFHost - Version: $FHOST_VERSION\n"
