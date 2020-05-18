@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.1"
-FHOST_BUILD="0.1.1"
+FHOST_BUILD="0.1.2"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -18,8 +18,19 @@ elif [ "$ID" == "debian" ] && [ "$VERSION_ID" == "9" ]; then
     OS="debian9"
 fi
 
+################## BEGIN - INSTALL SERVER ##################
+if [ "$ARG1" == "install" ] && [ "$ARG2" == "server" ]; then
+    if [ "$OS" == "debian10" ] || [ "$OS" == "debian9" ]; then
+        apt update
+        apt -y install apache2 php mariadb-server
+        mysql_secure_installation
+
+        ./fhost install client
+    fi
+################## END - INSTALL SERVER ##################
+
 ################## BEGIN - INSTALL CLIENT ##################
-if [ "$ARG1" == "install" ] && [ "$ARG2" == "client" ]; then
+elif [ "$ARG1" == "install" ] && [ "$ARG2" == "client" ]; then
     mkdir -p /var/www/fhost
     mkdir -p /etc/fhost
     mkdir -p /etc/fhost/templates
