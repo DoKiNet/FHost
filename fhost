@@ -1,0 +1,52 @@
+#!/bin/bash
+
+ARG1=$1
+ARG2=$2
+FHOST_VERSION="0.1"
+FHOST_BUILD="0.1.0"
+OS=""
+
+if [[ $EUID -ne 0 ]]; then
+    echo "FHost requires root privileges"
+    exit 1
+fi
+
+source /etc/os-release
+if [ "$ID" == "debian" ] && [ "$VERSION_ID" == "10" ]; then
+    OS="debian10"
+elif [ "$ID" == "debian" ] && [ "$VERSION_ID" == "9" ]; then
+    OS="debian9"
+fi
+
+################## BEGIN - INSTALL CLIENT ##################
+if [ "$ARG1" == "install" ] && [ "$ARG2" == "client" ]; then
+    mkdir -p /var/www/fhost
+    mkdir -p /etc/fhost
+    mkdir -p /etc/fhost/templates
+    touch /etc/fhost/fhost.log
+    touch /etc/fhost/vhosts
+
+    cp ./fhost /bin/fhost
+	chown root:root /bin/fhost
+	chmod 770 /bin/fhost
+
+    echo ""
+    echo "FHOST INSTALLED"
+    echo ""
+################## END - INSTALL CLIENT ##################
+
+
+################## BEGIN - UNINSTALL CLIENT ##################
+elif [ "$ARG1"  == "uninstall" ] && [ "$ARG2" == "client" ]; then
+
+    rm /bin/fhost
+
+    echo ""
+    echo "FHOST UNINSTALLED"
+    echo ""
+################## END - UNINSTALL CLIENT ##################
+
+else
+    echo -e "\nFHost - Version: $FHOST_VERSION\n"
+    echo -e "Fast Hosting Management\n"
+fi
