@@ -2,8 +2,8 @@
 
 ARG1=$1
 ARG2=$2
-FHOST_VERSION="0.1"
-FHOST_BUILD="0.1.2"
+FHOST_VERSION="0.2"
+FHOST_BUILD="0.2.0"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -26,6 +26,8 @@ if [ "$ARG1" == "install" ] && [ "$ARG2" == "server" ]; then
         mysql_secure_installation
 
         ./fhost install client
+    else
+        echo -e "\nOS NOT SUPPORTED\n"
     fi
 ################## END - INSTALL SERVER ##################
 
@@ -56,6 +58,142 @@ elif [ "$ARG1"  == "uninstall" ] && [ "$ARG2" == "client" ]; then
     echo "FHOST UNINSTALLED"
     echo ""
 ################## END - UNINSTALL CLIENT ##################
+
+
+
+################## BEGIN ADD VHOST ##############################
+elif [ "$ARG1" == "add" ] && [ "$ARG2" == "vhost" ]; then
+
+	echo -n "Domain Name: "
+	read DOMAIN
+
+
+if grep -Fxq "$DOMAIN" /etc/fhost/vhosts ;  then
+		echo "################################"
+		echo "#  Domain Name already exists  #"
+		echo "################################"
+
+else
+
+	echo $DOMAIN >> /etc/fhost/vhosts
+	mkdir /var/www/fhost/$DOMAIN
+	mkdir /var/www/fhost/$DOMAIN/html
+	touch /var/www/fhost/$DOMAIN/html/index.html
+	cat > /var/www/fhost/$DOMAIN/html/index.html << EOF
+<html>
+	<head>
+	</head>
+	<body><center><b>$DOMAIN</b></center></body>
+</html>
+EOF
+	chown -R root:www-data /var/www/fhost/$DOMAIN
+	chmod -R 777 /var/www/fhost/$DOMAIN
+
+	touch /etc/apache2/sites-available/$DOMAIN-fhost.conf
+	cat > /etc/apache2/sites-available/$DOMAIN-fhost.conf << EOF
+<VirtualHost *:80>
+    ServerName $DOMAIN
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/fhost/$DOMAIN/html
+
+    <Directory /var/www/fhost/$DOMAIN/html/>
+        AllowOverride All
+        Options -Indexes
+        Require all granted
+    </Directory>
+		ErrorLog ${APACHE_LOG_DIR}/error.log
+		CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+	cd /etc/apache2/sites-available
+	a2ensite $DOMAIN-fhost.conf > /etc/fhost/fhost.log 2>&1
+	systemctl reload apache2
+
+	echo -n "ROOT PASSWORD FOR MYSQL: "
+	read -s MYSQL_ROOT
+
+	echo "" > /etc/fhost/temp.sql
+	cat > /etc/fhost/temp.sql << EOF
+CREATE DATABASE \`$DOMAIN\`;
+CREATE USER \`$DOMAIN\`@'localhost' IDENTIFIED BY 'fhost';
+GRANT ALL ON \`$DOMAIN\`.* TO \`$DOMAIN\`@'localhost';
+EOF
+	mysql -u'root' -p$MYSQL_ROOT < /etc/fhost/temp.sql
+	echo "" > /etc/fhost/temp.sql
+
+echo -e "\n"
+echo "###########################################"
+echo "DB HOST: localhost"
+echo "DB NAME: $DOMAIN"
+echo "DB USER: $DOMAIN"
+echo "DB PASSWORD: fhost (Temporary Password)"
+echo "###########################################"
+
+fi
+
+echo -e "Do you want to add $DOMAIN in /etc/hosts for accessing it locally? (yes/NO)\n"
+read RET
+if [ $RET == 'yes' ] || [ $RET == 'YES' ] || [ $RET == 'y' ] || [ $RET == 'Y' ]; then
+	echo -e "127.0.0.1 $DOMAIN\n" >> /etc/hosts
+fi
+################## END ADD VHOST ##############################
+
+
+
+################## BEGIN DEL VHOST ##############################
+elif [ "$ARG1" == "del" ] && [ "$ARG2" == "vhost" ]; then
+	cat /etc/fhost/vhosts
+	echo -e "\n"
+	echo -n "VHOST TO DELETE: "
+	read VHOST_TO_DELETE
+
+if [ "$VHOST_TO_DELETE" == "" ]; then
+	exit
+fi
+
+
+	if grep -Fxq "$VHOST_TO_DELETE" /etc/fhost/vhosts ;  then
+	rm -rf /var/www/fhost/$VHOST_TO_DELETE
+
+	cd /etc/apache2/sites-available
+	a2dissite $VHOST_TO_DELETE-fhost.conf > /etc/fhost/fhost.log 2>&1
+	rm /etc/apache2/sites-available/$VHOST_TO_DELETE-fhost.conf
+	systemctl reload apache2
+
+	echo -n "ROOT PASSWORD FOR MYSQL: "
+	read -s MYSQL_ROOT
+
+	echo "" > /etc/fhost/temp.sql
+	cat > /etc/fhost/temp.sql << EOF
+DROP DATABASE \`$VHOST_TO_DELETE\`;
+DROP USER \`$VHOST_TO_DELETE\`@'localhost';
+EOF
+	mysql -u'root' -p$MYSQL_ROOT < /etc/fhost/temp.sql
+	echo "" > /etc/fhost/temp.sql
+
+sed -i /$VHOST_TO_DELETE/d /etc/fhost/vhosts
+sed -i /$VHOST_TO_DELETE/d /etc/hosts
+
+echo -e "\n"
+
+else
+	echo -e "\n"
+	echo "################################"
+	echo "#    Domain Name not exists    #"
+	echo "################################"
+fi
+################## END DEL VHOST ##############################
+
+
+
+################## BEGIN LIST VHOSTS ##############################
+elif [ "$ARG1" == "list" ] && [ "$ARG2" == "vhosts" -o "$ARG2" == "vhost" -o "$ARG2" == "" ]; then
+
+    echo ""
+    cat /etc/fhost/vhosts
+    echo ""
+
+################## END LIST VHOSTS ##############################
 
 
 ################## BEGIN - VERSION ##################
