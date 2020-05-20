@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.2"
-FHOST_BUILD="0.2.1"
+FHOST_BUILD="0.2.2"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -122,12 +122,13 @@ EOF
 	echo -n "ROOT PASSWORD FOR MYSQL: "
 	read -s MYSQL_ROOT
 
-	echo "" > /etc/fhost/temp.sql
+    echo "" > /etc/fhost/temp.sql
 	cat > /etc/fhost/temp.sql << EOF
 CREATE DATABASE \`$DOMAIN\`;
-CREATE USER \`$DOMAIN\`@'localhost' IDENTIFIED BY \`$DB_PASSWORD\`;
+CREATE USER \`$DOMAIN\`@'localhost' IDENTIFIED BY '$DB_PASSWORD';
 GRANT ALL ON \`$DOMAIN\`.* TO \`$DOMAIN\`@'localhost';
 EOF
+
 	mysql -u'root' -p$MYSQL_ROOT < /etc/fhost/temp.sql
 	echo "" > /etc/fhost/temp.sql
 
