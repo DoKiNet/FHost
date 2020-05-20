@@ -2,8 +2,8 @@
 
 ARG1=$1
 ARG2=$2
-FHOST_VERSION="0.2"
-FHOST_BUILD="0.2.2"
+FHOST_VERSION="0.3"
+FHOST_BUILD="0.3.0"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -34,6 +34,7 @@ if [ "$ARG1" == "install" ] && [ "$ARG2" == "server" ]; then
 ################## BEGIN - INSTALL CLIENT ##################
 elif [ "$ARG1" == "install" ] && [ "$ARG2" == "client" ]; then
     mkdir -p /var/www/fhost
+    mkdir -p /var/www/fhost/backup
     mkdir -p /etc/fhost
     mkdir -p /etc/fhost/templates
     touch /etc/fhost/fhost.log
@@ -207,17 +208,51 @@ elif [ "$ARG1" == "list" ] && [ "$ARG2" == "vhosts" -o "$ARG2" == "vhost" -o "$A
 ################## END LIST VHOSTS ##############################
 
 
+
+################## BEGIN BACKUP #################################
+elif [ "$ARG1" == "backup" ] && [ "$ARG2" == "" ]; then
+
+    fhost list vhosts
+
+    echo -ne "\nVHOST to backup: "
+    read VHOST_TO_BACKUP
+
+    echo -ne "\nROOT PASSWORD FOR MYSQL: "
+	read -s MYSQL_ROOT
+    echo -e "\n"
+
+    DATETIME=$(date +%Y%m%d_%H%M)
+    tar -cvzf /tmp/${VHOST_TO_BACKUP}_fhost_FS_${DATETIME}.tgz /var/www/fhost/${VHOST_TO_BACKUP}
+    mysqldump -u'root' -p$MYSQL_ROOT $VHOST_TO_BACKUP > /tmp/${VHOST_TO_BACKUP}_fhost_${DATETIME}.sql
+
+    tar -cvzf /var/www/fhost/backup/${VHOST_TO_BACKUP}_fhost_${DATETIME}.tgz /tmp/${VHOST_TO_BACKUP}_fhost_FS_${DATETIME}.tgz \
+    /tmp/${VHOST_TO_BACKUP}_fhost_${DATETIME}.sql
+
+    rm /tmp/${VHOST_TO_BACKUP}_fhost_FS_${DATETIME}.tgz
+    rm /tmp/${VHOST_TO_BACKUP}_fhost_${DATETIME}.sql
+
+    echo -e "\n"
+	echo "################################"
+	echo "#       BACKUP COMPLETED       #"
+	echo "################################"
+
+    echo -e "\n\n"
+    echo -e "Backup Directory: /var/www/fhost/backup\n"
+
+################## END BACKUP ###################################
+
+
 ################## BEGIN - VERSION ##################
 elif [ "$ARG1" == "version" ] || [ "$ARG1" == "-v" ] || \
      [ "$ARG1" == "--version" ] || [ "$ARG1" == "-version" ] || \
      [ "$ARG1" == "--v" ]; then
 
-    echo -e "\nFHost - Version: $FHOST_VERSION\n"
+    echo -e "\nFHost - Version: $FHOST_VERSION   Build: $FHOST_BUILD\n"
     echo -e "Fast Hosting Management\n"
 
 ################## END - VERSION ##################
 
 else
-    echo -e "\nFHost - Version: $FHOST_VERSION\n"
+    echo -e "\nFHost - Version: $FHOST_VERSION   Build: $FHOST_BUILD\n"
     echo -e "Fast Hosting Management\n"
 fi
