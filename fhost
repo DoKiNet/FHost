@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.3"
-FHOST_BUILD="0.3.0"
+FHOST_BUILD="0.3.1"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -240,6 +240,29 @@ elif [ "$ARG1" == "backup" ] && [ "$ARG2" == "" ]; then
     echo -e "Backup Directory: /var/www/fhost/backup\n"
 
 ################## END BACKUP ###################################
+
+
+
+################## BEGIN - HELP ##################
+elif [ "$ARG1" == "help" ] || [ "$ARG1" == "-h" ] || \
+     [ "$ARG1" == "--help" ] || [ "$ARG1" == "-help" ] || \
+     [ "$ARG1" == "--h" ] || [ "$ARG1" == "h" ]; then
+
+    echo -e "\nFHost - Version: $FHOST_VERSION   Build: $FHOST_BUILD\n"
+    echo -e "Fast Hosting Management\n\n"
+
+    echo -e "commands:\n"
+    echo " install server       apache,php,mariadb,fhost client installation"
+    echo " install client       fhost client installation"
+    echo " add vhost            create apache vhost and database"
+    echo " del vhost            delete apache vhost and database"
+    echo " list                 list vhost created with fhost client"
+    echo " backup               backup vhost files with database"
+    echo " version              provide fhost version"
+    echo " uninstall client     uninstall fhost client"
+
+################## END - HELP ##################
+
 
 
 ################## BEGIN - VERSION ##################
