@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.3"
-FHOST_BUILD="0.3.2"
+FHOST_BUILD="0.3.3"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -266,6 +266,10 @@ elif [ "$ARG1" == "install" ] && [ "$ARG2" == "wordpress" ]; then
     cd ..
     chmod -R 777 html
     chown -R root:www-data html
+
+    cd html
+    echo "define('FS_METHOD','direct');" >> wp-config.php
+
 
     echo -e "\n"
 	echo "################################"
