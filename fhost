@@ -3,7 +3,7 @@
 ARG1=$1
 ARG2=$2
 FHOST_VERSION="0.3"
-FHOST_BUILD="0.3.1"
+FHOST_BUILD="0.3.2"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -22,7 +22,7 @@ fi
 if [ "$ARG1" == "install" ] && [ "$ARG2" == "server" ]; then
     if [ "$OS" == "debian10" ] || [ "$OS" == "debian9" ]; then
         apt update
-        apt -y install apache2 php mariadb-server
+        apt -y install apache2 php mariadb-server wget
         mysql_secure_installation
 
         ./fhost install client
@@ -243,6 +243,41 @@ elif [ "$ARG1" == "backup" ] && [ "$ARG2" == "" ]; then
 
 
 
+################## BEGIN - INSTALL WORDPRESS ##################
+elif [ "$ARG1" == "install" ] && [ "$ARG2" == "wordpress" ]; then
+
+    fhost list vhosts
+
+    echo -ne "\nVHOST for wordpress installation: "
+    read VHOST_WORDPRESS
+
+    cd /var/www/fhost/$VHOST_WORDPRESS
+    rm -r html
+    mkdir html
+    cd /var/www/fhost/$VHOST_WORDPRESS/html
+
+    wget https://wordpress.org/latest.tar.gz
+    tar -xvzf latest.tar.gz
+    rm latest.tar.gz
+    cd wordpress
+    mv * ../
+    cd ..
+    rm -r wordpress
+    cd ..
+    chmod -R 777 html
+    chown -R root:www-data html
+
+    echo -e "\n"
+	echo "################################"
+	echo "#    WORDPRESS FILES COPIED    #"
+	echo "################################"
+
+    echo -e "\n\n"
+
+################## END - INSTALL WORDPRESS ##################
+
+
+
 ################## BEGIN - HELP ##################
 elif [ "$ARG1" == "help" ] || [ "$ARG1" == "-h" ] || \
      [ "$ARG1" == "--help" ] || [ "$ARG1" == "-help" ] || \
@@ -258,6 +293,7 @@ elif [ "$ARG1" == "help" ] || [ "$ARG1" == "-h" ] || \
     echo " del vhost            delete apache vhost and database"
     echo " list                 list vhost created with fhost client"
     echo " backup               backup vhost files with database"
+    echo " install wordpress    wordpress installation"
     echo " version              provide fhost version"
     echo " uninstall client     uninstall fhost client"
 
