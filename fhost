@@ -2,8 +2,8 @@
 
 ARG1=$1
 ARG2=$2
-FHOST_VERSION="0.3"
-FHOST_BUILD="0.3.3"
+FHOST_VERSION="1.0"
+FHOST_BUILD="1.0.0"
 OS=""
 
 if [[ $EUID -ne 0 ]]; then
@@ -267,9 +267,6 @@ elif [ "$ARG1" == "install" ] && [ "$ARG2" == "wordpress" ]; then
     chmod -R 777 html
     chown -R root:www-data html
 
-    cd html
-    echo "define('FS_METHOD','direct');" >> wp-config.php
-
 
     echo -e "\n"
 	echo "################################"
@@ -277,6 +274,9 @@ elif [ "$ARG1" == "install" ] && [ "$ARG2" == "wordpress" ]; then
 	echo "################################"
 
     echo -e "\n\n"
+    echo -e "To install the plugins automatically,\nadd the following line to the wp-config.php file:\n"
+    echo "define('FS_METHOD','direct');"
+    echo ""
 
 ################## END - INSTALL WORDPRESS ##################
 
